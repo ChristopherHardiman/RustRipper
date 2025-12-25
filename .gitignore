@@ -1,0 +1,26 @@
+# Rust
+target/
+Cargo.lock
+*.pdb
+*.exe
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local configuration
+conf.toml
+config.toml
+
+# Build artifacts
+flycheck*/
