@@ -1,0 +1,53 @@
+[workspace]
+members = [
+    "crates/core",
+    "crates/disc",
+    "crates/metadata",
+    "crates/ripper",
+    "crates/transcode",
+    "crates/storage",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Christopher Hardiman"]
+license = "MIT"
+
+[workspace.dependencies]
+# Core
+thiserror = "1.0"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# HTTP & API
+reqwest = { version = "0.11", features = ["json"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+log = "0.4"
+env_logger = "0.11"
+
+# Utilities
+regex = "1.10"
+lazy_static = "1.4"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+shellexpand = "3.1"
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
+
+# CLI & Progress
+clap = { version = "4.4", features = ["derive"] }
+indicatif = "0.17"
+
+# Notifications
+notify-rust = "4"
+
+# System
+udev = "0.7"
