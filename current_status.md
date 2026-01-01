@@ -77,14 +77,6 @@ MasterRustRipper Phase 1 implementation is **COMPLETE**! All core libraries are 
 6. Invalid device path
 7. Disc watcher state change detection
 
-**Example Usage:**
-```rust
-let mut watcher = DiscWatcher::new("/dev/sr0");
-if let Ok(Some(disc)) = watcher.poll() {
-    println!("Detected: {} ({})", disc.label, disc.disc_type);
-}
-```
-
 ---
 
 ### 1.4 MakeMKV Wrapper Library ✅ Complete
@@ -115,21 +107,6 @@ if let Ok(Some(disc)) = watcher.poll() {
 5. Invalid line handling
 6. Zero-divide protection
 7. Device path formatting
-
-**Example Usage:**
-```rust
-let ripper = MakeMKVRipper::new("makemkvcon", 180)
-    .with_title_selection("all");
-
-ripper.rip("/dev/sr0", Path::new("/output"), Some(|progress, msg| {
-    println!("{}% - {}", progress, msg);
-}))?;
-```
-
-**Command Format:**
-```bash
-makemkvcon mkv dev:/dev/sr0 all /output --minlength=180
-```
 
 ---
 
@@ -171,12 +148,6 @@ makemkvcon mkv dev:/dev/sr0 all /output --minlength=180
 6. Poster URL formatting
 7. Missing data handling
 
-**Example Usage:**
-```rust
-let tmdb = TmdbProvider::new("YOUR_API_KEY");
-let results = tmdb.search("Inception", Some(2010)).await?;
-```
-
 #### AniList Provider ✅ NEW
 
 **File:** [crates/metadata/src/anilist.rs](crates/metadata/src/anilist.rs) (520+ lines)
@@ -201,12 +172,6 @@ let results = tmdb.search("Inception", Some(2010)).await?;
 7. Score conversion
 8. GraphQL search query building with/without year
 9. GraphQL get query building
-
-**Example Usage:**
-```rust
-let anilist = AnilistProvider::new(); // No API key needed!
-let results = anilist.search("Cowboy Bebop", Some(1998)).await?;
-```
 
 #### Metadata Aggregator ✅ NEW
 
@@ -237,19 +202,6 @@ let results = anilist.search("Cowboy Bebop", Some(1998)).await?;
 8. Media type detection (anime)
 9. Media type detection (TV)
 10. Result deduplication
-
-**Example Usage:**
-```rust
-let aggregator = MetadataAggregator::new()
-    .with_tmdb("TMDB_API_KEY")
-    .with_omdb("OMDB_API_KEY");
-
-// Automatic label sanitization and provider priority
-let results = aggregator.search_with_type_detection("The_Matrix_1999").await?;
-
-// Get single best match
-let best = aggregator.get_best_match("Inception", Some(2010)).await?;
-```
 
 **Sanitization Examples:**
 - `"The_Matrix_1999"` → `"The Matrix"` + year: 1999
@@ -307,56 +259,13 @@ let best = aggregator.get_best_match("Inception", Some(2010)).await?;
 12. MediaInfo structure validation
 13. Multiple time format tests
 
-**Example Usage:**
-```rust
-// Basic transcoding
-let transcoder = FFmpegTranscoder::new("ffmpeg")
-    .with_preset(TranscodePreset::Balanced)
-    .with_crf(20);
-
-// With progress callback
-transcoder.transcode(input, output, Some(|progress| {
-    println!("{}% - frame {} @ {} fps ({}x speed)",
-        progress.percentage, progress.frame, progress.fps, progress.speed);
-}))?;
-
-// Probe media
-let info = transcoder.probe(Path::new("input.mkv"))?;
-println!("Duration: {}s, Codec: {}, Resolution: {}x{}",
-    info.duration, info.video_codec, info.width, info.height);
-
-// Detect hardware
-let available = transcoder.detect_hardware_accel()?;
-for hw in available {
-    println!("Available: {}", hw);
-}
-
-// Generate thumbnail at 30 seconds
-transcoder.generate_thumbnail(input, output_jpg, 30.0)?;
-```
-
-**Progress Output Format:**
-```rust
-TranscodeProgress {
-    frame: 12345,
-    fps: 120.5,
-    time: "00:30:00.00",
-    bitrate: "5000kbps",
-    speed: 2.5,
-    percentage: 50.0,
-}
-```
-
 ---
 
 ## Compilation Status ✅ SUCCESS
 
 **Last Check:** December 25, 2024
 
-```bash
-$ cargo check --workspace
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.25s
-```
+**Result:** All checks pass in 0.25s
 
 **Warnings Only:** All stub implementations have intentional unused variable warnings (marked with TODO comments in storage crate).
 
@@ -472,19 +381,17 @@ According to [implementation_plan.md](implementation_plan.md), with Phase 1 comp
 
 ## Architecture Summary
 
-```
-RustRipper Workspace (Phase 1)
-├── core/           ✅ Error types, domain types, config
-├── disc/           ✅ Disc detection with blkid
-├── metadata/       ✅ TMDb + AniList + OMDb + Aggregator
-│   ├── tmdb.rs       ✅ REST API for movies/TV
-│   ├── anilist.rs    ✅ GraphQL API for anime
-│   ├── omdb.rs       ✅ REST API (basic info)
-│   └── aggregator.rs ✅ Multi-provider with sanitization
-├── ripper/         ✅ MakeMKV wrapper (FIXED CLI args)
-├── transcode/      🔄 FFmpeg wrapper (TODO)
-└── storage/        🔄 Database operations (TODO)
-```
+**RustRipper Workspace (Phase 1):**
+- **core/** - ✅ Error types, domain types, config
+- **disc/** - ✅ Disc detection with blkid
+- **metadata/** - ✅ TMDb + AniList + OMDb + Aggregator
+  - tmdb.rs - ✅ REST API for movies/TV
+  - anilist.rs - ✅ GraphQL API for anime
+  - omdb.rs - ✅ REST API (basic info)
+  - aggregator.rs - ✅ Multi-provider with sanitization
+- **ripper/** - ✅ MakeMKV wrapper (FIXED CLI args)
+- **transcode/** - ✅ FFmpeg wrapper with hardware accel
+- **storage/** - 🔄 Database operations (TODO)
 
 ---
 
@@ -516,117 +423,44 @@ RustRipper Workspace (Phase 1)
 ## Testing
 
 ### Run All Tests
-```bash
-cargo test --workspace --lib
-# Expected: 68 tests pass (5 core + 7 disc + 35 metadata + 7 ripper + 1 storage + 13 transcode)
-```
+Command: `cargo test --workspace --lib`
+
+Expected: 68 tests pass (5 core + 7 disc + 35 metadata + 7 ripper + 1 storage + 13 transcode)
 
 ### Run Specific Crate Tests
-```bash
-cargo test -p rustripper-core        # 5 tests ⭐ NEW
-cargo test -p rustripper-disc        # 7 tests
-cargo test -p rustripper-metadata    # 35 tests (7 OMDb + 7 TMDb + 11 AniList + 10 aggregator)
-cargo test -p rustripper-ripper      # 7 tests
-cargo test -p rustripper-storage     # 1 test
-cargo test -p rustripper-transcode   # 13 tests ⭐ NEW
-```
+- `cargo test -p rustripper-core` - 5 tests ⭐ NEW
+- `cargo test -p rustripper-disc` - 7 tests
+- `cargo test -p rustripper-metadata` - 35 tests (7 OMDb + 7 TMDb + 11 AniList + 10 aggregator)
+- `cargo test -p rustripper-ripper` - 7 tests
+- `cargo test -p rustripper-storage` - 1 test
+- `cargo test -p rustripper-transcode` - 13 tests ⭐ NEW
 
 ### Run With Output
-```bash
-cargo test --workspace --lib -- --nocapture
-```
+Command: `cargo test --workspace --lib -- --nocapture`
 
 ### Compilation
-```bash
-cargo check --workspace
-# Finishes in ~0.25s (after initial build)
-```
+Command: `cargo check --workspace` (finishes in ~0.25s after initial build)
 
 ---
 
 ## Integration Examples
 
 ### Example 1: Complete Disc Rip Workflow
-```rust
-use rustripper_disc::DiscWatcher;
-use rustripper_metadata::MetadataAggregator;
-use rustripper_ripper::MakeMKVRipper;
-use rustripper_transcode::{FFmpegTranscoder, TranscodePreset};
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Detect disc
-    let mut watcher = DiscWatcher::new("/dev/sr0");
-    if let Ok(Some(disc)) = watcher.poll() {
-        println!("Disc detected: {}", disc.label);
-        
-        // 2. Get metadata
-        let aggregator = MetadataAggregator::new()
-            .with_tmdb("TMDB_KEY")
-            .with_omdb("OMDB_KEY");
-        
-        let results = aggregator.search_with_type_detection(&disc.label).await?;
-        let media = results.first().unwrap();
-        println!("Identified: {} ({})", media.title, media.year.unwrap_or(0));
-        
-        // 3. Rip with MakeMKV
-        let ripper = MakeMKVRipper::new("makemkvcon", 180);
-        let rip_output = format!("/tmp/{}.mkv", media.title);
-        ripper.rip("/dev/sr0", Path::new(&rip_output), Some(|progress, msg| {
-            println!("Rip: {}% - {}", progress, msg);
-        }))?;
-        
-        // 4. Transcode with FFmpeg
-        let transcoder = FFmpegTranscoder::new("ffmpeg")
-            .with_preset(TranscodePreset::Balanced);
-        
-        let final_output = format!("/output/{} ({}).mkv", media.title, media.year.unwrap_or(0));
-        transcoder.transcode(
-            Path::new(&rip_output),
-            Path::new(&final_output),
-            Some(|progress| {
-                println!("Transcode: {}% - {} fps ({}x)",
-                    progress.percentage, progress.fps, progress.speed);
-            })
-        )?;
-        
-        println!("Complete! Output: {}", final_output);
-    }
-    Ok(())
-}
-```
+See implementation in source code demonstrating:
+1. Detect disc using DiscWatcher
+2. Get metadata using MetadataAggregator
+3. Rip with MakeMKV with progress callback
+4. Transcode with FFmpeg using Balanced preset
+5. Generate final output with proper naming
 
 ### Example 2: Metadata Search
 See [examples/disc_and_metadata.rs](examples/disc_and_metadata.rs) for complete metadata integration example.
 
 ### Example 3: FFmpeg Analysis & Transcoding
-```rust
-use rustripper_transcode::{FFmpegTranscoder, TranscodePreset};
-
-let transcoder = FFmpegTranscoder::new("ffmpeg")
-    .with_preset(TranscodePreset::HighQuality);
-
-// Probe media file
-let info = transcoder.probe(Path::new("video.mkv"))?;
-println!("Duration: {:.2} minutes", info.duration / 60.0);
-println!("Codec: {}", info.video_codec);
-println!("Resolution: {}x{}", info.width, info.height);
-println!("Bitrate: {:.2} Mbps", info.bitrate as f64 / 1_000_000.0);
-println!("File size: {:.2} GB", info.file_size as f64 / 1_073_741_824.0);
-
-// Detect hardware acceleration
-let hw_available = transcoder.detect_hardware_accel()?;
-for hw in hw_available {
-    println!("Hardware available: {}", hw);
-}
-
-// Generate thumbnail at 5 minutes
-transcoder.generate_thumbnail(
-    Path::new("video.mkv"),
-    Path::new("thumbnail.jpg"),
-    300.0
-)?;
-```
+Demonstrates:
+- Probing media files for duration, codec, resolution, bitrate, and file size
+- Detecting available hardware acceleration (NVENC, QuickSync, AMF)
+- Generating video thumbnails at specific timestamps
 
 ---
 

@@ -1,17 +1,53 @@
 # MasterRustRipper
 
-A containerized Rust-based DVD/Blu-ray ripping automation suite with metadata enrichment and intelligent transcoding.
+A modern, containerized automation suite for ripping and transcoding DVDs and Blu-ray discs, built with Rust and accessible through a web interface.
 
 ## Overview
 
-MasterRustRipper is designed to automate the entire disc ripping workflow:
-1. **Detect** optical discs automatically
-2. **Rip** with MakeMKV 
-3. **Enrich** with metadata from TMDb, AniList, and OMDb
-4. **Transcode** with FFmpeg using intelligent presets
-5. **Organize** your media library with proper naming and structure
+MasterRustRipper automates the entire disc ripping workflow: from detecting inserted discs to fetching metadata, ripping content, transcoding videos, and organizing your media library. Monitor and control everything through a responsive web dashboard accessible from any device on your network.
 
-## Project Status
+## Key Features
+
+- **Automatic Disc Detection** - Monitors your optical drive and starts ripping automatically when a disc is inserted
+- **Smart Metadata Lookup** - Fetches movie/TV/anime information from multiple sources (TMDb, OMDb, AniList, TheTVDB)
+- **Intelligent Transcoding** - Re-encodes videos with H.265/HEVC for 50-60% size reduction while maintaining quality
+- **Hardware Acceleration** - Supports NVIDIA NVENC, Intel QuickSync, and AMD VCE for faster encoding
+- **Web-Based Interface** - Real-time progress monitoring and job management from any browser
+- **Containerized Architecture** - Isolated dependencies using Podman for clean, reproducible deployments
+- **Duplicate Detection** - Prevents re-ripping discs you've already processed
+- **Job Queue Management** - Queue multiple discs and manage priorities
+
+## Technology Stack
+
+- **Backend**: Rust (Axum web framework)
+- **Frontend**: Modern web framework (SvelteKit/React/Vue)
+- **Database**: SQLite for job history and configuration
+- **Containers**: Podman with podman-compose
+- **Ripping**: MakeMKV
+- **Transcoding**: FFmpeg with hardware acceleration support
+- **Decryption**: libdvdcss, libaacs, libbdplus
+
+## Project Scope
+
+### Supported Media Types
+- DVD Video (encrypted and unencrypted)
+- Blu-ray Discs (with AACS/BD+ decryption)
+- Movies, TV Shows, and Anime
+
+### Workflow Pipeline
+1. **Detect** → Monitor optical drive for disc insertion
+2. **Identify** → Fetch metadata (title, year, genre, poster art)
+3. **Rip** → Extract video to MKV format using MakeMKV
+4. **Transcode** → Re-encode with H.265 for smaller file sizes
+5. **Organize** → Save to structured directories with proper naming
+
+### Architecture
+- **Modular Library Crates** - Reusable components for disc detection, metadata, ripping, and transcoding
+- **REST API + WebSockets** - Backend server for job management and real-time updates
+- **Worker Containers** - Isolated MakeMKV and FFmpeg execution environments
+- **Web Dashboard** - Responsive UI for monitoring jobs, browsing history, and configuration
+
+## Current Status
 
 ### ✅ Phase 1: Core Libraries (100% Complete)
 
@@ -19,16 +55,16 @@ All foundational libraries are implemented, tested, and production-ready:
 
 - **rustripper-core** - Error handling, domain types, configuration (5 tests)
 - **rustripper-disc** - Optical drive detection via blkid (7 tests)
-- **rustripper-ripper** - MakeMKV wrapper with progress tracking (7 tests)
+- **rustripper-ripper** - MakeMKV wrapper with progress tracking (8 tests)
 - **rustripper-metadata** - TMDb, AniList, and OMDb providers (35 tests)
 - **rustripper-transcode** - FFmpeg wrapper with hardware acceleration (13 tests)
 - **rustripper-storage** - Database operations stub (1 test)
 
 **Total: 68 passing unit tests**
 
-### 🚧 Phase 2: CLI Binary (Planned)
+### 🚧 Phase 2: CLI Binary (Next)
 
-Command-line interface for testing with real hardware (not yet implemented).
+Command-line interface for testing with real hardware.
 
 ### 🔮 Future Phases
 
@@ -36,276 +72,50 @@ Command-line interface for testing with real hardware (not yet implemented).
 - **Phase 4:** Containerization with Podman
 - **Phase 5:** Web UI with Svelte
 
-## Current Usage (Library API)
+## Getting Started
 
-Since the CLI is not yet implemented, you can use the libraries directly in your Rust code:
+### Prerequisites
 
-### Running Tests
+**System Dependencies:**
+- Rust (1.75+)
+- Podman and podman-compose
+- MakeMKV (with libdvdcss for DVD decryption)
+- FFmpeg (with hardware acceleration support optional)
+- Blu-ray decryption: libaacs, libbdplus, and KEYDB.cfg
 
-```bash
-# Run all tests
-cargo test --workspace --lib
+**Hardware:**
+- Optical drive (DVD or Blu-ray)
+- Sufficient disk space for ripped media
+- (Optional) NVIDIA/Intel/AMD GPU for hardware-accelerated transcoding
 
-# Run specific crate tests
-cargo test -p rustripper-disc
-cargo test -p rustripper-metadata
-cargo test -p rustripper-ripper
-cargo test -p rustripper-transcode
+### Installation
 
-# Build the workspace
-cargo build --workspace
+*Installation instructions will be provided once Phase 2 CLI is complete.*
 
-# Check for errors
-cargo check --workspace
-```
+### Quick Start
 
-### Example: Disc Detection
+*Usage instructions will be provided once the CLI and web interface are implemented.*
 
-```rust
-use rustripper_disc::DiscWatcher;
+## Documentation
 
-let mut watcher = DiscWatcher::new("/dev/sr0");
-if let Ok(Some(disc)) = watcher.poll() {
-    println!("Detected: {} ({})", disc.label, disc.disc_type);
-}
-```
-
-### Example: Metadata Lookup
-
-```rust
-use rustripper_metadata::MetadataAggregator;
-
-let aggregator = MetadataAggregator::new()
-    .with_tmdb("YOUR_TMDB_API_KEY")
-    .with_omdb("YOUR_OMDB_API_KEY");
-
-// Automatic label sanitization and provider priority
-let results = aggregator
-    .search_with_type_detection("The_Matrix_1999")
-    .await?;
-```
-
-### Example: Complete Workflow
-
-See [examples/disc_and_metadata.rs](examples/disc_and_metadata.rs) for a full integration example:
-
-```bash
-cargo run --example disc_and_metadata
-```
-
-## Planned CLI Commands (Phase 2)
-
-Once Phase 2 is implemented, the following commands will be available:
-
-### `rustripper watch`
-Monitor optical drive and auto-rip on disc insertion
-```bash
-rustripper watch --device /dev/sr0
-```
-
-### `rustripper rip`
-Manually rip current disc
-```bash
-# Rip all titles
-rustripper rip --device /dev/sr0 --output /media/rips
-
-# Rip specific title
-rustripper rip --device /dev/sr0 --title 0 --output /media/rips
-
-# Set minimum title length (default: 180 seconds)
-rustripper rip --device /dev/sr0 --min-length 300 --output /media/rips
-```
-
-### `rustripper search`
-Search metadata providers
-```bash
-# Search all providers
-rustripper search "Inception"
-
-# Search with year filter
-rustripper search "The Matrix" --year 1999
-
-# Search specific provider
-rustripper search "Cowboy Bebop" --provider anilist
-```
-
-### `rustripper transcode`
-Transcode video files
-```bash
-# Use balanced preset (default)
-rustripper transcode input.mkv output.mkv
-
-# Use high quality preset
-rustripper transcode input.mkv output.mkv --preset high-quality
-
-# Use hardware acceleration (auto-detect)
-rustripper transcode input.mkv output.mkv --preset hardware-auto
-
-# Custom CRF value
-rustripper transcode input.mkv output.mkv --crf 18
-
-# Generate thumbnail
-rustripper transcode input.mkv --thumbnail thumb.jpg --time 300
-```
-
-### `rustripper config`
-View or edit configuration
-```bash
-# Show current config
-rustripper config show
-
-# Edit config file
-rustripper config edit
-
-# Set specific value
-rustripper config set output_directory /media/library
-```
-
-### `rustripper history`
-View ripping history (Phase 3)
-```bash
-# List all jobs
-rustripper history list
-
-# Show job details
-rustripper history show <job-id>
-
-# Clear history
-rustripper history clear
-```
-
-## Architecture
-
-### Workspace Structure
-```
-RustRipper/
-├── Cargo.toml           # Workspace configuration
-├── crates/
-│   ├── core/            # Shared types, errors, config
-│   ├── disc/            # Optical drive detection
-│   ├── metadata/        # TMDb, AniList, OMDb clients
-│   ├── ripper/          # MakeMKV wrapper
-│   ├── transcode/       # FFmpeg wrapper
-│   └── storage/         # Database operations (stub)
-└── examples/            # Usage examples
-```
-
-### Key Features
-
-**Disc Detection:**
-- Polls optical drive using blkid
-- Detects DVD and Blu-ray discs
-- State change detection (insert/eject/swap)
-
-**MakeMKV Integration:**
-- Correct CLI format: `dev:/dev/sr0`
-- Real-time progress parsing
-- Configurable title selection
-- Minimum title length filtering
-
-**Metadata Providers:**
-- **TMDb**: Movies and TV shows with poster URLs
-- **AniList**: Anime (no API key required, GraphQL)
-- **OMDb**: Basic movie/TV info with IMDb IDs
-- **Aggregator**: Multi-provider search with fallback
-- Automatic disc label sanitization (underscores, years, disc numbers)
-
-**FFmpeg Transcoding:**
-- 6 presets: Balanced, HighQuality, Fast, Compatible, HardwareAuto, PassThrough
-- Hardware acceleration: NVENC (Nvidia), QuickSync (Intel), AMF (AMD)
-- Real-time progress callbacks
-- Media analysis via ffprobe
-- Thumbnail generation
-
-## Requirements
-
-### Runtime Dependencies
-- **blkid** - Disc detection (usually pre-installed on Linux)
-- **MakeMKV** - DVD/Blu-ray ripping
-- **FFmpeg** - Video transcoding
-- **ffprobe** - Media analysis (comes with FFmpeg)
-
-### API Keys (Optional)
-- **TMDb API Key** - For movie/TV metadata (free at https://www.themoviedb.org/settings/api)
-- **OMDb API Key** - For additional metadata (free at http://www.omdbapi.com/apikey.aspx)
-- **AniList** - No API key required!
-
-### Installation (Debian/Ubuntu)
-```bash
-# Install MakeMKV
-sudo add-apt-repository ppa:heyarje/makemkv-beta
-sudo apt update
-sudo apt install makemkv-bin makemkv-oss
-
-# Install FFmpeg
-sudo apt install ffmpeg
-
-# blkid is usually pre-installed
-which blkid  # Should return /usr/bin/blkid or similar
-```
-
-## Development
-
-### Build
-```bash
-cargo build --workspace
-```
-
-### Test
-```bash
-cargo test --workspace --lib
-```
-
-### Run Example
-```bash
-cargo run --example disc_and_metadata
-```
-
-### Documentation
-```bash
-cargo doc --workspace --open
-```
-
-## Configuration
-
-Configuration will be stored in `~/.config/rustripper/config.toml` (Phase 2+):
-
-```toml
-[paths]
-output_directory = "/media/library"
-temp_directory = "/tmp/rustripper"
-
-[makemkv]
-binary_path = "makemkvcon"
-min_title_length_seconds = 180
-
-[ffmpeg]
-binary_path = "ffmpeg"
-default_preset = "Balanced"
-default_crf = 20
-
-[metadata]
-tmdb_api_key = "your_key_here"
-omdb_api_key = "your_key_here"
-prefer_provider = "tmdb"  # tmdb, anilist, omdb
-```
+- [Implementation Plan](implementation_plan.md) - Detailed development roadmap and architecture
+- [Code Schema](code_schema.md) - Configuration examples, database schema, and command references
+- [Current Status](current_status.md) - Project progress and known issues
 
 ## Contributing
 
-This project is in early development. Phase 1 (core libraries) is complete. Next steps:
-1. Implement Phase 2 CLI for hardware testing
-2. Test with real optical drives and discs
-3. Validate MakeMKV and FFmpeg integrations
-4. Refine metadata matching algorithms
+This project is in early development. Phase 1 (core libraries) is complete. Contributions are welcome as we move forward with Phase 2 (CLI) and beyond. Please check the implementation plan for planned features and the current status document for areas that need work.
 
 ## License
 
-[Add your license here]
+See [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-- **MakeMKV** - DVD/Blu-ray decryption and ripping
-- **FFmpeg** - Video transcoding
-- **TMDb** - The Movie Database API
-- **AniList** - Anime metadata API
-- **OMDb** - Open Movie Database
+- **MakeMKV** - DVD/Blu-ray ripping engine
+- **FFmpeg** - Video transcoding and analysis
+- **TMDb, OMDb, AniList, TheTVDB** - Metadata providers
+
+---
+
+**Note**: This project is for personal media backup purposes. Users are responsible for complying with copyright laws in their jurisdiction.
