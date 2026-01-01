@@ -6,6 +6,7 @@ members = [
     "crates/ripper",
     "crates/transcode",
     "crates/storage",
+    "cli",
 ]
 resolver = "2"
 
