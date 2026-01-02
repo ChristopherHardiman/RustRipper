@@ -15,7 +15,7 @@ pub async fn show() -> anyhow::Result<()> {
         }
         Err(e) => {
             println!("{} Configuration file not found or invalid", "⚠".bright_yellow().bold());
-            println!("  Error: {}", e.to_string().bright_red());
+            println!("  Error: {}", format!("{}", e).bright_red());
             println!();
             println!("  Run {} to create default configuration", "rustripper config init".bright_cyan());
             Ok(())
@@ -34,7 +34,7 @@ pub async fn edit() -> anyhow::Result<()> {
         println!("{} Configuration file does not exist", "⚠".bright_yellow().bold());
         println!("  Creating default configuration...");
         let config = Config::default();
-        config.save()?;
+        config.save(&config_path)?;
         println!("{} Default configuration created", "✓".bright_green().bold());
         println!();
     }
@@ -184,36 +184,36 @@ pub async fn init() -> anyhow::Result<()> {
 fn print_config(config: &Config) {
     println!("{}", "[Paths]".bright_magenta().bold());
     println!("  output_directory = {}", 
-        config.output_directory.as_ref().unwrap_or(&"not set".to_string()).bright_yellow());
+        config.general.output_dir.display().to_string().bright_yellow());
     println!("  disc_device = {}", 
-        config.disc_device.as_ref().unwrap_or(&"/dev/sr0".to_string()).bright_yellow());
+        config.general.disc_device.bright_yellow());
     println!();
 
     println!("{}", "[MakeMKV]".bright_magenta().bold());
     println!("  executable = {}", 
-        config.makemkv_executable.as_ref().unwrap_or(&"makemkvcon".to_string()).bright_yellow());
+        config.makemkv.executable.bright_yellow());
     println!("  min_title_length = {} seconds", 
-        config.makemkv_min_title_length.unwrap_or(180).to_string().bright_yellow());
+        config.makemkv.min_title_length.to_string().bright_yellow());
     println!();
 
     println!("{}", "[FFmpeg]".bright_magenta().bold());
     println!("  executable = {}", 
-        config.ffmpeg_executable.as_ref().unwrap_or(&"ffmpeg".to_string()).bright_yellow());
+        config.ffmpeg.executable.bright_yellow());
     println!("  preset = {}", 
-        config.ffmpeg_preset.as_ref().unwrap_or(&"balanced".to_string()).bright_yellow());
+        config.ffmpeg.preset.bright_yellow());
     println!("  crf = {}", 
-        config.ffmpeg_crf.unwrap_or(20).to_string().bright_yellow());
+        config.ffmpeg.crf.to_string().bright_yellow());
     println!();
 
     println!("{}", "[Metadata]".bright_magenta().bold());
-    let tmdb_status = if let Some(key) = &config.metadata_tmdb_api_key {
+    let tmdb_status = if let Some(ref key) = config.metadata.tmdb_api_key {
         if key.is_empty() { "not set".bright_red() } else { "configured".bright_green() }
     } else {
         "not set".bright_red()
     };
     println!("  tmdb_api_key = {}", tmdb_status);
 
-    let omdb_status = if let Some(key) = &config.metadata_omdb_api_key {
+    let omdb_status = if let Some(ref key) = config.metadata.omdb_api_key {
         if key.is_empty() { "not set".bright_red() } else { "configured".bright_green() }
     } else {
         "not set".bright_red()

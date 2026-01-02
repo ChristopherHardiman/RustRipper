@@ -57,9 +57,7 @@ pub async fn execute(device: &str, output_dir: Option<&str>, auto_rip: bool) -> 
                             if let Some(year) = media.year {
                                 println!("  Year: {}", year.to_string().bright_yellow());
                             }
-                            if let Some(media_type) = media.media_type {
-                                println!("  Type: {}", format!("{:?}", media_type).bright_cyan());
-                            }
+                            println!("  Type: {}", format!("{:?}", media.media_type).bright_cyan());
                             println!();
 
                             if auto_rip {
@@ -129,16 +127,16 @@ async fn fetch_metadata(disc_label: &str) -> anyhow::Result<Option<rustripper_co
     let mut aggregator = MetadataAggregator::new();
     
     if let Some(cfg) = &config {
-        if let Some(tmdb_key) = &cfg.metadata_tmdb_api_key {
-            if !tmdb_key.is_empty() {
-                aggregator = aggregator.with_tmdb(tmdb_key);
+            if let Some(ref tmdb_key) = cfg.metadata.tmdb_api_key {
+                if !tmdb_key.is_empty() {
+                    aggregator = aggregator.with_tmdb(tmdb_key);
+                }
             }
-        }
-        if let Some(omdb_key) = &cfg.metadata_omdb_api_key {
-            if !omdb_key.is_empty() {
-                aggregator = aggregator.with_omdb(omdb_key);
+            if let Some(ref omdb_key) = cfg.metadata.omdb_api_key {
+                if !omdb_key.is_empty() {
+                    aggregator = aggregator.with_omdb(omdb_key);
+                }
             }
-        }
     }
 
     let results = aggregator.search_with_type_detection(disc_label).await?;

@@ -233,6 +233,17 @@ impl Default for NotificationConfig {
 }
 
 impl Config {
+    /// Get the default configuration path
+    pub fn default_path() -> std::path::PathBuf {
+        let config_dir = shellexpand::tilde("~/.config/masterrustripper");
+        std::path::PathBuf::from(config_dir.as_ref()).join("config.toml")
+    }
+
+    /// Load configuration from default path
+    pub fn load() -> crate::Result<Self> {
+        Self::load_or_default(&Self::default_path())
+    }
+
     /// Load configuration from TOML file, or return defaults if not found
     pub fn load_or_default(path: &std::path::Path) -> crate::Result<Self> {
         if path.exists() {

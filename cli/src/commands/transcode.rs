@@ -1,7 +1,7 @@
 use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 use log::{error, info};
-use rustripper_transcode::{FFmpegTranscoder, TranscodePreset, HardwareAccel};
+use rustripper_transcode::{FFmpegTranscoder, encoder::{TranscodePreset, HardwareAccel}};
 use std::path::Path;
 
 pub async fn execute(

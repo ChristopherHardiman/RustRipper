@@ -48,9 +48,7 @@ pub async fn execute(
             println!("  {} {}", "Year:".bright_blue(), year.to_string().bright_yellow());
         }
         
-        if let Some(media_type) = &media.media_type {
-            println!("  {} {}", "Type:".bright_blue(), format!("{:?}", media_type).bright_green());
-        }
+        println!("  {} {}", "Type:".bright_blue(), format!("{:?}", media.media_type).bright_green());
         
         if let Some(poster) = &media.poster_url {
             println!("  {} {}", "Poster:".bright_blue(), poster.bright_cyan());
@@ -83,20 +81,20 @@ async fn search_all(query: &str, year: Option<u32>) -> anyhow::Result<Vec<rustri
     let mut aggregator = MetadataAggregator::new();
     
     if let Some(cfg) = &config {
-        if let Some(tmdb_key) = &cfg.metadata_tmdb_api_key {
-            if !tmdb_key.is_empty() {
-                aggregator = aggregator.with_tmdb(tmdb_key);
+            if let Some(ref tmdb_key) = cfg.metadata.tmdb_api_key {
+                if !tmdb_key.is_empty() {
+                    aggregator = aggregator.with_tmdb(tmdb_key);
+                }
             }
-        }
-        if let Some(omdb_key) = &cfg.metadata_omdb_api_key {
-            if !omdb_key.is_empty() {
-                aggregator = aggregator.with_omdb(omdb_key);
+            if let Some(ref omdb_key) = cfg.metadata.omdb_api_key {
+                if !omdb_key.is_empty() {
+                    aggregator = aggregator.with_omdb(omdb_key);
+                }
             }
-        }
     }
 
     let results = if year.is_some() {
-        aggregator.search(query, year).await?
+        aggregator.search(query, year.map(|y| y as u16)).await?
     } else {
         aggregator.search_with_type_detection(query).await?
     };

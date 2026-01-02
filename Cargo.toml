@@ -7,6 +7,7 @@ members = [
     "crates/transcode",
     "crates/storage",
     "cli",
+    "backend",
 ]
 resolver = "2"
 
